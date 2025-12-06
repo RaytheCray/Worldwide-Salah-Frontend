@@ -18,7 +18,7 @@ dependencies:
 
   # Location Services
   geolocator: ^10.0.0
-  geocoding: ^2.1.0
+  geocoding: ^3.0.0
   
   # Data Storage
   shared_preferences: ^2.2.0

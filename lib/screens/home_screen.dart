@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:worldwide_salah/services/geocoding_service.dart';
 import '../services/api_service.dart';
 import '../models/prayer_times.dart' as prayer_model;
 import '../models/mosque.dart' as mosque_model;
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _mosquesLoading = false;
   String? _mosqueError;
   bool _mosquesLoaded = false;  // Track if mosques have been loaded
+  String _locationName = 'Loading...';
   
   String _calculationMethod = 'ISNA';
   String _asrMethod = 'standard';
@@ -129,6 +131,14 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _currentPosition = position;
         });
+
+        // Get readable location name
+        _locationName = await GeocodingService.getLocationName(
+          position.latitude,
+          position.longitude,
+        );
+
+        await _loadPrayerTimes();
       }
 
       // Load prayer times ONLY (no mosques on startup to save memory)
@@ -196,7 +206,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // ✅ MEMORY OPTIMIZATION: Load mosques only when user requests
   Future<void> _loadNearbyMosques() async {
     if (_currentPosition == null) {
-      debugPrint('⚠️ HomeScreen: Cannot load mosques - no position');
+      setState(() {
+        _mosqueError = 'Location not available';
+      });
       return;
     }
 
@@ -206,49 +218,46 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      debugPrint('🔄 HomeScreen: Requesting nearby mosques (radius: 20km)');
+      debugPrint('🕌 Loading mosques for: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}');
+      
       final response = await _api.getNearbyMosques(
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
-        radius: 20.0,  // ✅ Reduced from 50km to 20km for less memory usage
+        radius: 10.0,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 15),  // Add timeout
         onTimeout: () {
-          throw Exception('Mosque search timed out');
+          throw Exception('Request timed out. Check your internet connection.');
         },
       );
 
       if (response['success'] == true) {
         final mosquesList = response['mosques'] as List;
-        debugPrint('✅ HomeScreen: Found ${mosquesList.length} unique mosques');
+        setState(() {
+          _nearbyMosques = mosquesList
+              .map((json) => mosque_model.Mosque.fromJson(json))
+              .toList();
+          _mosquesLoaded = true;
+          _mosquesLoading = false;
+        });
         
-        if (mounted) {
+        debugPrint('✅ Loaded ${_nearbyMosques.length} mosques');
+        
+        if (_nearbyMosques.isEmpty) {
           setState(() {
-            _nearbyMosques = mosquesList
-                .take(10)  // ✅ Limit to 10 mosques max to save memory
-                .map((json) => mosque_model.Mosque.fromJson(json))
-                .toList();
-            _mosquesLoading = false;
-            _mosquesLoaded = true;
+            _mosqueError = 'No mosques found within 10km';
           });
         }
-        
-        if (mosquesList.isEmpty) {
-          debugPrint('ℹ️ HomeScreen: No mosques found in 20km radius');
-        }
       } else {
-        debugPrint('❌ HomeScreen: Mosque API returned error: ${response['error']}');
         throw Exception(response['error'] ?? 'Failed to load mosques');
       }
     } catch (e) {
-      debugPrint('❌ HomeScreen: Error loading mosques: $e');
-      if (mounted) {
-        setState(() {
-          _nearbyMosques = [];
-          _mosquesLoading = false;
-          _mosqueError = 'Unable to load nearby mosques';
-        });
-      }
+      debugPrint('❌ Error loading mosques: $e');
+      setState(() {
+        _mosquesLoading = false;
+        _mosquesLoaded = false;
+        _mosqueError = e.toString().replaceAll('Exception: ', '');
+      });
     }
   }
 
@@ -281,8 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
-                  'Lng: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                  _locationName,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade700,
