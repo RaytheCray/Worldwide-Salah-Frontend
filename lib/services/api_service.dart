@@ -36,6 +36,8 @@ class ApiService {
     String method = 'ISNA',
     String asrMethod = 'standard',
   }) async {
+    // Get device timezone offset in hours
+    final timezoneOffset = DateTime.now().timeZoneOffset.inHours;
     try {
       final response = await http
           .post(
@@ -47,6 +49,7 @@ class ApiService {
               'date': date,
               'method': method,
               'asr_method': asrMethod,
+              'timezone_offset': timezoneOffset,
             }),
           )
           .timeout(timeoutDuration);
