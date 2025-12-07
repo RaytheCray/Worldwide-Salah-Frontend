@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/monthly_tab.dart';
-import 'screens/today_tab.dart';
+import 'screens/ramadan_tab.dart';
 
 void main() {
   // ✅ REMOVED the problematic debugPrint override
@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
 
   static const List<Widget> _pages = [
     HomeScreen(),
-    TodayTab(),
+    RamadanTab(),
     MonthlyTab(),
   ];
 
@@ -59,8 +59,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.today),
-            label: 'Today',
+            icon: Icon(Icons.nightlight),
+            label: 'Ramadan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),
