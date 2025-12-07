@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'qibla_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String location;
@@ -76,14 +78,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void _handleLocationTap() {
+  // ✅ UPDATED: GPS Location Implementation
+  Future<void> _handleLocationTap() async {
     if (!mounted) return;
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('GPS location feature coming soon!'),
-      ),
-    );
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppableAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Getting your location...'),
+            ],
+          ),
+          duration: Duration(seconds: 10),
+        ),
+      );
+
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled. Please enable them in settings.');
+      }
+
+      // Check and request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permission denied. Please grant permission in settings.');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permission permanently denied. Please enable in settings.');
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 10));
+
+      if (!mounted) return;
+
+      // Update location text field
+      setState(() {
+        _locationController.text = 
+            'Lat: ${position.latitude.toStringAsFixed(4)}, '
+            'Lng: ${position.longitude.toStringAsFixed(4)}';
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✓ Location updated successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Show error message
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -117,6 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Location Section
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -171,18 +253,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                         child: ListTile(
-                          leading:
-                              Icon(Icons.my_location, color: Colors.blue.shade600),
+                          leading: Icon(Icons.my_location, color: Colors.blue.shade600),
                           title: const Text('Use Current Location'),
-                          trailing:
-                              const Icon(Icons.chevron_right, color: Colors.grey),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                           onTap: _handleLocationTap,
                         ),
                       ),
                     ],
                   ),
                 ),
+                
                 const SizedBox(height: 16),
+                
+                // Calculation Method Section
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -218,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: DropdownButton<String>(
                             value: _selectedCalculationMethod,
                             isExpanded: true,
-                            items: ['ISNA', 'MWL', 'Egyptian', 'Karachi', 'Makkah']
+                            items: ['ISNA', 'MWL', 'EGYPTIAN', 'KARACHI', 'MAKKAH', 'TEHRAN']
                                 .map((method) => DropdownMenuItem(
                                       value: method,
                                       child: Text(
@@ -239,7 +322,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+                
                 const SizedBox(height: 16),
+                
+                // ✅ FIXED: Asr Calculation - Changed to lowercase values
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -279,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 .map((method) => DropdownMenuItem(
                                       value: method,
                                       child: Text(
-                                        method == 'standard' ? 'Standard' : 'Hanafi', // DIsplay capitalized but value is lowercase
+                                        method == 'standard' ? 'Standard' : 'Hanafi',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
@@ -292,6 +378,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // ✅ NEW: Qibla Direction Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Qibla Direction',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.explore,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        title: const Text(
+                          'Find Qibla',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: const Text('Compass pointing to Mecca'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const QiblaScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
