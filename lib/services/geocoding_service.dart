@@ -5,6 +5,8 @@ class GeocodingService {
   /// Get readable location from coordinates
   static Future<String> getLocationName(double latitude, double longitude) async {
     try {
+      debugPrint('🌍 Getting location name for: $latitude, $longitude');
+      
       List<Placemark> placemarks = await placemarkFromCoordinates(
         latitude,
         longitude,
@@ -18,17 +20,19 @@ class GeocodingService {
         
         if (place.locality != null && place.locality!.isNotEmpty) {
           parts.add(place.locality!);
-        } else if (place.subAdministrativeArea != null) {
+        } else if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
           parts.add(place.subAdministrativeArea!);
         }
         
         if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
           parts.add(place.administrativeArea!);
-        } else if (place.country != null) {
+        } else if (place.country != null && place.country!.isNotEmpty) {
           parts.add(place.country!);
         }
         
-        return parts.isNotEmpty ? parts.join(', ') : 'Unknown Location';
+        String locationName = parts.isNotEmpty ? parts.join(', ') : 'Unknown Location';
+        debugPrint('✅ Location name: $locationName');
+        return locationName;
       }
       
       return 'Unknown Location';
