@@ -106,7 +106,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Qibla Direction'),
-        backgroundColor: Colors.green.shade700,
+        backgroundColor: Colors.blue.shade600,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -131,140 +131,145 @@ class _QiblaScreenState extends State<QiblaScreen> {
                     ],
                   ),
                 )
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Compass display
-                      Container(
-                        width: 280,
-                        height: 280,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              spreadRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Compass circle with degree marks
-                            Container(
-                              width: 260,
-                              height: 260,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.green.shade700,
-                                  width: 3,
-                                ),
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Compass display
+                        Container(
+                          width: 280,
+                          height: 280,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                spreadRadius: 5,
                               ),
-                            ),
-                            // Qibla arrow
-                            Transform.rotate(
-                              angle: _qiblaDirection! * math.pi / 180,
-                              child: Icon(
-                                Icons.navigation,
-                                size: 120,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                            // Kaaba icon in center
-                            const Icon(
-                              Icons.home,
-                              size: 40,
-                              color: Colors.black87,
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Direction info
-                      Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Text(
-                                '${_qiblaDirection!.toStringAsFixed(1)}°',
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green.shade700,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _getCardinalDirection(_qiblaDirection!),
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              const Divider(),
-                              const SizedBox(height: 16),
-                              if (_currentPosition != null) ...[
-                                Text(
-                                  'Your Location',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
+                              // Compass circle with degree marks
+                              Container(
+                                width: 260,
+                                height: 260,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.blue.shade600,
+                                    width: 3,
                                   ),
                                 ),
-                                Text(
-                                  'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}',
-                                  style: const TextStyle(fontSize: 14),
+                              ),
+                              // Qibla arrow
+                              Transform.rotate(
+                                angle: _qiblaDirection! * math.pi / 180,
+                                child: Icon(
+                                  Icons.navigation,
+                                  size: 120,
+                                  color: Colors.blue.shade600,
                                 ),
-                                Text(
-                                  'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ],
+                              ),
+                              // Kaaba icon in center
+                              const Icon(
+                                Icons.home,
+                                size: 40,
+                                color: Colors.black87,
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Refresh button
-                      OutlinedButton.icon(
-                        onPressed: _calculateQibla,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Recalculate'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Direction info
+                        Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${_qiblaDirection!.toStringAsFixed(1)}°',
+                                  style: TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _getCardinalDirection(_qiblaDirection!),
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Divider(),
+                                const SizedBox(height: 16),
+                                if (_currentPosition != null) ...[
+                                  Text(
+                                    'Your Location',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Info text
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          'Point your device in the direction of the arrow to face the Kaaba in Mecca',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Refresh button
+                        OutlinedButton.icon(
+                          onPressed: _calculateQibla,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Recalculate'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Info text
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            'Point your device in the direction of the arrow to face the Kaaba in Mecca',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
     );
