@@ -275,11 +275,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: DropdownButton<String>(
                             value: _selectedAsrMethod,
                             isExpanded: true,
-                            items: ['Standard', 'Hanafi']
+                            items: ['standard', 'hanafi']
                                 .map((method) => DropdownMenuItem(
                                       value: method,
                                       child: Text(
-                                        method,
+                                        method == 'standard' ? 'Standard' : 'Hanafi', // DIsplay capitalized but value is lowercase
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
