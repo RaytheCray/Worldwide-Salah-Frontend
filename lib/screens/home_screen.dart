@@ -52,6 +52,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeApp() async {
     debugPrint('📱 HomeScreen: Initializing app...');
+
+    //Safety timeout
+    Future.delayed(const Duration(seconds: 20), () {
+      if (_isLoading && mounted) {
+        debugPrint('⏰ HomeScreen: Loading timeout triggered');
+        setState(() {
+          _isLoading = false;
+          _errorMessage ??= 'Loading timed out. Please try again.';
+        });
+      }
+    });
+
     await _getCurrentLocation();
   }
 
@@ -60,104 +72,46 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _mosqueError = null;
     });
 
     try {
-      // Check if location service is enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception(
-          'Location services are disabled.\n\n'
-          'Please enable location services in your device settings.'
-        );
+        throw Exception('Location services are disabled');
       }
 
-      // Check location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        debugPrint('⚠️ HomeScreen: Location permission denied, requesting...');
         permission = await Geolocator.requestPermission();
-        
         if (permission == LocationPermission.denied) {
-          throw Exception(
-            'Location permission denied.\n\n'
-            'Please grant location permission in:\n'
-            'Settings > Apps > Worldwide Salah > Permissions'
-          );
+          throw Exception('Location permission denied');
         }
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception(
-          'Location permission permanently denied.\n\n'
-          'Please enable location in:\n'
-          'Settings > Apps > Worldwide Salah > Permissions'
-        );
-      }
-
-      // Get current position
-      debugPrint('🌍 HomeScreen: Fetching GPS coordinates...');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        forceAndroidLocationManager: false,
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception(
-            'GPS timeout after 15 seconds.\n\n'
-            'Please check:\n'
-            '• Location services are enabled\n'
-            '• You have a clear view of the sky\n'
-            '• Try again in a few moments'
-          );
-        },
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('✅ HomeScreen: Location obtained');
+      
+      setState(() {
+        _currentPosition = position;
+      });
+
+      // Get readable location name
+      _locationName = await GeocodingService.getLocationName(
+        position.latitude,
+        position.longitude,
       );
-
-      debugPrint('✅ HomeScreen: Location obtained - Lat: ${position.latitude}, Lng: ${position.longitude}');
       
-      // Validate we didn't get default NYC coordinates
-      if (position.latitude == 40.7128 && position.longitude == -74.0060) {
-        debugPrint('⚠️ WARNING: Got default NYC coordinates, trying again...');
-        
-        final position2 = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best,
-        ).timeout(const Duration(seconds: 15));
-        
-        setState(() {
-          _currentPosition = position2;
-        });
-      } else {
-        setState(() {
-          _currentPosition = position;
-        });
+      setState(() {});  // Update UI with location name
 
-        // Get readable location name
-        _locationName = await GeocodingService.getLocationName(
-          position.latitude,
-          position.longitude,
-        );
-
-        await _loadPrayerTimes();
-      }
-
-      // Load prayer times ONLY (no mosques on startup to save memory)
-      debugPrint('📿 HomeScreen: Loading prayer times...');
       await _loadPrayerTimes();
-      debugPrint('✅ HomeScreen: Prayer times loaded successfully');
-      
-      // ✅ MEMORY OPTIMIZATION: Don't auto-load mosques
-      // User can load them manually with the button
-      
     } catch (e) {
-      debugPrint('❌ HomeScreen: Error in getCurrentLocation: $e');
+      debugPrint('❌ HomeScreen: Location error: $e');
       setState(() {
         _errorMessage = e.toString();
-      });
-    } finally {
-      debugPrint('🏁 HomeScreen: Stopping loading screen');
-      setState(() {
-        _isLoading = false;
+        _isLoading = false;  // STOP LOADING
       });
     }
   }
@@ -165,18 +119,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadPrayerTimes() async {
     if (_currentPosition == null) {
       debugPrint('⚠️ HomeScreen: Cannot load prayer times - no position');
-      throw Exception('No location available');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     }
 
     try {
       final today = DateTime.now();
       final dateString = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-      debugPrint('🔄 HomeScreen: Requesting prayer times for:');
-      debugPrint('   Latitude: ${_currentPosition!.latitude}');
-      debugPrint('   Longitude: ${_currentPosition!.longitude}');
-      debugPrint('   Date: $dateString');
-      debugPrint('   Method: $_calculationMethod, Asr: $_asrMethod');
+      debugPrint('🔄 HomeScreen: Requesting prayer times');
       
       final response = await _api.getPrayerTimes(
         latitude: _currentPosition!.latitude,
@@ -187,19 +140,21 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (response['success'] == true) {
-        debugPrint('✅ HomeScreen: Prayer times API returned success');
-        debugPrint('   Times: ${response['times']}');
+        debugPrint('✅ HomeScreen: Prayer times loaded successfully');
         
         setState(() {
           _prayerTimes = prayer_model.PrayerTimes.fromJson(response);
+          _isLoading = false;  // STOP LOADING
         });
       } else {
-        debugPrint('❌ HomeScreen: Prayer times API returned error: ${response['error']}');
         throw Exception(response['error'] ?? 'Failed to load prayer times');
       }
     } catch (e) {
-      debugPrint('❌ HomeScreen: Error loading prayer times: $e');
-      rethrow;
+      debugPrint('❌ HomeScreen: Error: $e');
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;  // STOP LOADING
+      });
     }
   }
 
