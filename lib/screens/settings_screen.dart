@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'qibla_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final String location;
+  final Position? currentPosition;
+  final String locationName;
   final String calculationMethod;
   final String asrMethod;
-  final Function(String) onLocationChanged;
+  final Function(Position, String) onLocationChanged;
   final Function(String) onCalculationMethodChanged;
   final Function(String) onAsrMethodChanged;
 
   const SettingsScreen({
     super.key,
-    required this.location,
+    required this.currentPosition,
+    required this.locationName,
     required this.calculationMethod,
     required this.asrMethod,
     required this.onLocationChanged,
@@ -25,19 +28,23 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late TextEditingController _locationController;
+  late TextEditingController _cityController;
   late String _selectedCalculationMethod;
   late String _selectedAsrMethod;
+  Position? _selectedPosition;
+  String? _selectedLocationName;
   bool _isInitialized = false;
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    _locationController = TextEditingController(text: widget.location);
+    _cityController = TextEditingController(text: widget.locationName);
     _selectedCalculationMethod = widget.calculationMethod;
     _selectedAsrMethod = widget.asrMethod;
+    _selectedPosition = widget.currentPosition;
+    _selectedLocationName = widget.locationName;
     
-    // Delay initialization to avoid vsync timing conflicts with page transition
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
         setState(() {
@@ -49,21 +56,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _locationController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
   void _handleSave() {
-    // Unfocus any text fields to stop animations before navigating
     FocusScope.of(context).unfocus();
     
-    // Small delay to let animations stop
     Future.delayed(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       
-      // Pop first, then update parent state
       Navigator.pop(context, {
-        'location': _locationController.text,
+        'position': _selectedPosition,
+        'locationName': _selectedLocationName,
         'calculationMethod': _selectedCalculationMethod,
         'asrMethod': _selectedAsrMethod,
       });
@@ -78,12 +83,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  // ✅ UPDATED: GPS Location Implementation
+  Future<void> _searchCity() async {
+    if (_cityController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a city name')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      List<Location> locations = await locationFromAddress(_cityController.text.trim());
+      
+      if (locations.isEmpty) {
+        throw Exception('Location not found');
+      }
+
+      final location = locations.first;
+      
+      if (!mounted) return;
+
+      setState(() {
+        _selectedPosition = Position(
+          latitude: location.latitude,
+          longitude: location.longitude,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        );
+        _selectedLocationName = _cityController.text.trim();
+        _isSearching = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✓ Found: $_selectedLocationName'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      
+      setState(() {
+        _isSearching = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location not found. Try: "City, State" or "City, Country"'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   Future<void> _handleLocationTap() async {
     if (!mounted) return;
     
     try {
-      // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -104,64 +172,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-      // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled. Please enable them in settings.');
+        throw Exception('Location services are disabled');
       }
 
-      // Check and request permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          throw Exception('Location permission denied. Please grant permission in settings.');
+          throw Exception('Location permission denied');
         }
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permission permanently denied. Please enable in settings.');
-      }
-
-      // Get current position
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
 
-      // Update location text field
+      String cityName = 'Location Found';
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          cityName = place.locality ?? place.administrativeArea ?? 'Unknown Location';
+          if (place.administrativeArea != null && place.locality != place.administrativeArea) {
+            cityName += ', ${place.administrativeArea}';
+          }
+        }
+      } catch (e) {
+        debugPrint('Could not get city name: $e');
+      }
+
       setState(() {
-        _locationController.text = 
-            'Lat: ${position.latitude.toStringAsFixed(4)}, '
-            'Lng: ${position.longitude.toStringAsFixed(4)}';
+        _selectedPosition = position;
+        _selectedLocationName = cityName;
+        _cityController.text = cityName;
       });
 
-      // Show success message
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✓ Location updated successfully!'),
+        SnackBar(
+          content: Text('✓ Location: $cityName'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
 
     } catch (e) {
       if (!mounted) return;
       
-      // Show error message
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: 'OK',
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
         ),
       );
     }
@@ -192,9 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
       body: !_isInitialized
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -227,22 +297,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: _locationController,
-                              decoration: InputDecoration(
-                                hintText: 'Enter city or address',
-                                filled: true,
-                                fillColor: Colors.grey.shade100,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _cityController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter city (e.g., New York, NY)',
+                                      filled: true,
+                                      fillColor: Colors.grey.shade100,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => _searchCity(),
+                                  ),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: _isSearching ? null : _searchCity,
+                                  icon: _isSearching
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : const Icon(Icons.search),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.blue.shade600,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  tooltip: 'Search location',
+                                ),
+                              ],
+                            ),
+                            if (_selectedPosition != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Lat: ${_selectedPosition!.latitude.toStringAsFixed(4)}, '
+                                'Lon: ${_selectedPosition!.longitude.toStringAsFixed(4)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -254,7 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         child: ListTile(
                           leading: Icon(Icons.my_location, color: Colors.blue.shade600),
-                          title: const Text('Use Current Location'),
+                          title: const Text('Use Current GPS Location'),
                           trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                           onTap: _handleLocationTap,
                         ),
@@ -265,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Calculation Method Section
+                // Calculation Method
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -304,13 +408,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             items: ['ISNA', 'MWL', 'EGYPTIAN', 'KARACHI', 'MAKKAH', 'TEHRAN']
                                 .map((method) => DropdownMenuItem(
                                       value: method,
-                                      child: Text(
-                                        method,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+                                      child: Text(method),
                                     ))
                                 .toList(),
                             onChanged: (value) {
@@ -325,7 +423,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // ✅ FIXED: Asr Calculation - Changed to lowercase values
+                // Asr Calculation
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -366,10 +464,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       value: method,
                                       child: Text(
                                         method == 'standard' ? 'Standard' : 'Hanafi',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
                                       ),
                                     ))
                                 .toList(),
@@ -385,7 +479,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // ✅ NEW: Qibla Direction Section
+                // Qibla Direction
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

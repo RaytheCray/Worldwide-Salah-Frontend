@@ -293,37 +293,45 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => SettingsScreen(
-                    location: _currentPosition != null
-                        ? 'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
-                          'Lng: ${_currentPosition!.longitude.toStringAsFixed(4)}'
-                        : 'Location not available',
+                    currentPosition: _currentPosition,
+                    locationName: _locationName,
                     calculationMethod: _calculationMethod,
                     asrMethod: _asrMethod,
-                    onLocationChanged: (newLocation) {
-                      debugPrint('📍 Location changed: $newLocation');
+                    onLocationChanged: (position, name) {
+                      // This callback is not actually used - we get data from Navigator.pop result
                     },
                     onCalculationMethodChanged: (newMethod) {
-                      setState(() {
-                        _calculationMethod = newMethod;
-                      });
-                      _loadPrayerTimes();
+                      // This callback is not actually used - we get data from Navigator.pop result
                     },
                     onAsrMethodChanged: (newAsrMethod) {
-                      setState(() {
-                        _asrMethod = newAsrMethod;
-                      });
-                      _loadPrayerTimes();
+                      // This callback is not actually used - we get data from Navigator.pop result
                     },
                   ),
                 ),
               );
               
               if (result != null) {
-                setState(() {
-                  _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
-                  _asrMethod = result['asrMethod'] ?? _asrMethod;
-                });
-                await _loadPrayerTimes();
+                debugPrint('✅ Settings result: $result');
+
+                // Update location if changed
+                if (result['position'] != null) {
+                  setState(() {
+                    _currentPosition = result['position'];
+                    _locationName = result['locationName'] ?? _locationName;
+                    _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
+                    _asrMethod = result['asrMethod'] ?? _asrMethod;
+                  });
+
+                  debugPrint('📍 Location updated to: $_locationName');
+                  await _loadPrayerTimes(); // Reload with new location
+                } else {
+                  // Only method/asr changed
+                  setState(() {
+                    _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
+                    _asrMethod = result['asrMethod'] ?? _asrMethod;
+                  });
+                  await _loadPrayerTimes();
+                }
               }
             },
           ),
