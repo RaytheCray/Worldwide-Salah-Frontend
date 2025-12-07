@@ -26,6 +26,8 @@ class ApiService {
     try {
       // Get device timezone offset in hours
       final timezoneOffset = DateTime.now().timeZoneOffset.inHours;
+
+      debugPrint('📤 Device timezone offset: $timezoneOffset hours');
       
       final response = await http
           .post(
