@@ -477,12 +477,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Method: ${_prayerTimes!.method}',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                if (_prayerTimes!.cached)
-                  const Chip(
-                    label: Text('Cached', style: TextStyle(fontSize: 10)),
-                    backgroundColor: Colors.green,
-                    labelPadding: EdgeInsets.symmetric(horizontal: 4),
-                  ),
               ],
             ),
           ],
