@@ -85,10 +85,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -96,11 +96,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(width: 16),
-              Text('Getting your location...'),
+              const SizedBox(width: 16),
+              const Text('Getting your location...'),
             ],
           ),
-          duration: Duration(seconds: 10),
+          duration: const Duration(seconds: 10),
         ),
       );
 
@@ -416,12 +416,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade50,
+                            color: Colors.blue.shade50,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.explore,
-                            color: Colors.green.shade700,
+                            color: Colors.blue.shade600,
                           ),
                         ),
                         title: const Text(
