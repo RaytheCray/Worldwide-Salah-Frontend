@@ -135,7 +135,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
   }
 
   String _getCardinalDirection(double bearing) {
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const directions = ['North', 'Northeast', 'East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest'];
     final index = ((bearing + 22.5) % 360 / 45).floor();
     return directions[index];
   }
