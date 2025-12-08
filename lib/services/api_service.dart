@@ -20,8 +20,9 @@ class ApiService {
     required double latitude,
     required double longitude,
     required String date,
-    String method = 'ISNA',
-    String asrMethod = 'standard',
+    required String method,
+    required String asrMethod,
+    bool forceRefresh = false,
   }) async {
     try {
       // Get device timezone offset in hours
@@ -39,7 +40,8 @@ class ApiService {
               'date': date,
               'method': method,
               'asr_method': asrMethod,
-              'timezone_offset': timezoneOffset,  // NEW: Send timezone
+              if (forceRefresh) 'bypass_cache': true, 
+              'timezone_offset': timezoneOffset, 
             }),
           )
           .timeout(timeoutDuration);
