@@ -229,9 +229,25 @@ class _RamadanTabState extends State<RamadanTab> {
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: ExpansionTile(
-                    title: Text(
-                      'Day ${day['day']} - ${day['date']}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Day ${day['day']} - ${day['date']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        // Add disclaimer for Day 30
+                        if (day['day'] == 30)
+                          Text(
+                            '(If necessary)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
                     ),
                     children: [
                       ListTile(
