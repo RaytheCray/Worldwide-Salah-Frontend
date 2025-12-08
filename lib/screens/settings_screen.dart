@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'qibla_screen.dart';
+import '../services/time_format_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Position? currentPosition;
@@ -35,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _selectedLocationName;
   bool _isInitialized = false;
   bool _isSearching = false;
+  bool _use24HourFormat = true;
 
   @override
   void initState() {
@@ -45,6 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _selectedPosition = widget.currentPosition;
     _selectedLocationName = widget.locationName;
     
+    _loadTimeFormat();
+    
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
         setState(() {
@@ -52,6 +56,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       }
     });
+  }
+
+  Future<void> _loadTimeFormat() async {
+    final use24Hour = await TimeFormatService.get24HourFormat();
+    if (mounted) {
+      setState(() {
+        _use24HourFormat = use24Hour;
+      });
+    }
   }
 
   @override
@@ -63,6 +76,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _handleSave() {
     FocusScope.of(context).unfocus();
     
+    // Save time format preference
+    TimeFormatService.set24HourFormat(_use24HourFormat);
+    
     Future.delayed(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       
@@ -71,6 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'locationName': _selectedLocationName,
         'calculationMethod': _selectedCalculationMethod,
         'asrMethod': _selectedAsrMethod,
+        'use24HourFormat': _use24HourFormat,
       });
     });
   }
@@ -214,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _cityController.text = cityName;
       });
 
-      if (!mounted) return;  // Add mounted check before using context
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -479,6 +496,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 
                 const SizedBox(height: 16),
                 
+                // Time Format Toggle
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Time Format',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _use24HourFormat ? '24-Hour (13:00)' : '12-Hour (1:00 PM)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    value: _use24HourFormat,
+                    onChanged: (value) {
+                      setState(() {
+                        _use24HourFormat = value;
+                      });
+                    },
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
                 // Qibla Direction
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -525,7 +583,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        subtitle: const Text('Compass pointing to Makkah'),
+                        subtitle: const Text('Compass pointing to Mecca'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.push(

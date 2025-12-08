@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../utils/prayer_calculator.dart';
+import '../services/time_format_service.dart';
 
 class RamadanTab extends StatefulWidget {
   const RamadanTab({super.key});
@@ -15,11 +16,22 @@ class _RamadanTabState extends State<RamadanTab> {
   String? _errorMessage;
   Position? _currentPosition;
   int _selectedYear = DateTime.now().year;
+  bool _use24HourFormat = true;
 
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _initializeData();
+  }
+
+  Future<void> _loadPreferences() async {
+    final use24Hour = await TimeFormatService.get24HourFormat();
+    if (mounted) {
+      setState(() {
+        _use24HourFormat = use24Hour;
+      });
+    }
   }
 
   Future<void> _initializeData() async {
@@ -113,6 +125,10 @@ class _RamadanTabState extends State<RamadanTab> {
             icon: const Icon(Icons.chevron_right),
             onPressed: () => _changeYear(1),
           ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _initializeData,
+          ),
         ],
       ),
       body: _buildBody(),
@@ -154,7 +170,10 @@ class _RamadanTabState extends State<RamadanTab> {
     final schedule = _ramadanData!['fasting_schedule'] as List;
 
     return RefreshIndicator(
-      onRefresh: _loadRamadanSchedule,
+      onRefresh: () async {
+        await _loadPreferences(); // Reload preferences
+        await _loadRamadanSchedule();
+      },
       child: Column(
         children: [
           // Ramadan Info Card
@@ -198,6 +217,14 @@ class _RamadanTabState extends State<RamadanTab> {
               itemCount: schedule.length,
               itemBuilder: (context, index) {
                 final day = schedule[index];
+                final suhoorEnd = TimeFormatService.formatTime(
+                  day['suhoor_end'],
+                  _use24HourFormat,
+                );
+                final iftarTime = TimeFormatService.formatTime(
+                  day['iftar_time'],
+                  _use24HourFormat,
+                );
                 
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -212,7 +239,7 @@ class _RamadanTabState extends State<RamadanTab> {
                         leading: const Icon(Icons.restaurant, color: Colors.orange),
                         title: const Text('Suhoor Ends (Fajr)'),
                         trailing: Text(
-                          day['suhoor_end'],
+                          suhoorEnd,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -224,7 +251,7 @@ class _RamadanTabState extends State<RamadanTab> {
                         leading: const Icon(Icons.wb_twilight, color: Colors.deepOrange),
                         title: const Text('Iftar Begins (Maghrib)'),
                         trailing: Text(
-                          day['iftar_time'],
+                          iftarTime,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

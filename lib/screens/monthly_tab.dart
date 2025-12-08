@@ -1,9 +1,7 @@
-// FIXED VERSION - lib/screens/monthly_tab.dart
-// This file now properly passes location parameters to PrayerCalculator
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../utils/prayer_calculator.dart';
+import '../services/time_format_service.dart';
 
 class MonthlyTab extends StatefulWidget {
   const MonthlyTab({super.key});
@@ -18,11 +16,22 @@ class _MonthlyTabState extends State<MonthlyTab> {
   String? _errorMessage;
   Position? _currentPosition;
   DateTime _selectedDate = DateTime.now();
+  bool _use24HourFormat = true;
 
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _initializeData();
+  }
+
+  Future<void> _loadPreferences() async {
+    final use24Hour = await TimeFormatService.get24HourFormat();
+    if (mounted) {
+      setState(() {
+        _use24HourFormat = use24Hour;
+      });
+    }
   }
 
   Future<void> _initializeData() async {
@@ -39,13 +48,11 @@ class _MonthlyTabState extends State<MonthlyTab> {
     });
 
     try {
-      // Check if location service is enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw Exception('Location services are disabled');
       }
 
-      // Check location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -58,7 +65,6 @@ class _MonthlyTabState extends State<MonthlyTab> {
         throw Exception('Location permission permanently denied');
       }
 
-      // Get current position
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(
@@ -88,12 +94,11 @@ class _MonthlyTabState extends State<MonthlyTab> {
     });
 
     try {
-      // ✅ FIXED: Now passing required latitude and longitude
       final monthlyData = await PrayerCalculator.getMonthlyPrayerTimes(
         year: _selectedDate.year,
         month: _selectedDate.month,
-        latitude: _currentPosition!.latitude,   // ✅ ADDED
-        longitude: _currentPosition!.longitude, // ✅ ADDED
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude,
         method: 'ISNA',
         asrMethod: 'standard',
       );
@@ -137,6 +142,10 @@ class _MonthlyTabState extends State<MonthlyTab> {
             icon: const Icon(Icons.chevron_right),
             onPressed: () => _changeMonth(1),
           ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _initializeData,
+          ),
         ],
       ),
       body: _buildBody(),
@@ -179,7 +188,10 @@ class _MonthlyTabState extends State<MonthlyTab> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadMonthlyData,
+      onRefresh: () async {
+        await _loadPreferences(); // Reload preferences
+        await _loadMonthlyData();
+      },
       child: ListView.builder(
         itemCount: _monthlyPrayerTimes!.length,
         itemBuilder: (context, index) {
@@ -199,11 +211,18 @@ class _MonthlyTabState extends State<MonthlyTab> {
                 if (prayer.name == 'Sunrise') {
                   return const SizedBox.shrink();
                 }
+                
+                // Format the time based on user preference
+                final formattedTime = TimeFormatService.formatTime(
+                  prayer.formattedTime,
+                  _use24HourFormat,
+                );
+                
                 return ListTile(
                   dense: true,
                   title: Text(prayer.name),
                   trailing: Text(
-                    prayer.formattedTime,
+                    formattedTime,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

@@ -1,10 +1,8 @@
-// FIXED VERSION - home_screen.dart
-// Improved loading state management to prevent freezing
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:worldwide_salah/services/geocoding_service.dart';
 import '../services/api_service.dart';
+import '../services/time_format_service.dart';
 import '../models/prayer_times.dart' as prayer_model;
 import '../models/mosque.dart' as mosque_model;
 import 'settings_screen.dart';
@@ -27,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _mosqueError;
   bool _mosquesLoaded = false;
   String _locationName = 'Loading...';
+  bool _use24HourFormat = true;
   
   String _calculationMethod = 'ISNA';
   String _asrMethod = 'standard';
@@ -35,13 +34,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     debugPrint('🔄 HomeScreen: initState called');
+    _loadPreferences();
     _initializeApp();
+  }
+
+  Future<void> _loadPreferences() async {
+    final use24Hour = await TimeFormatService.get24HourFormat();
+    if (mounted) {
+      setState(() {
+        _use24HourFormat = use24Hour;
+      });
+    }
   }
 
   Future<void> _initializeApp() async {
     debugPrint('📱 HomeScreen: Initializing app...');
     
-    // Set loading immediately
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -49,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
     
-    // Safety timeout - force stop loading after 15 seconds
     Future.delayed(const Duration(seconds: 15), () {
       if (mounted && _isLoading) {
         debugPrint('⏰ HomeScreen: Safety timeout triggered - forcing stop');
@@ -92,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentPosition = position;
       });
 
-      // Get readable location name
       try {
         _locationName = await GeocodingService.getLocationName(
           position.latitude,
@@ -151,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
         
         setState(() {
           _prayerTimes = prayer_model.PrayerTimes.fromJson(response);
-          _isLoading = false; // CRITICAL: Stop loading
+          _isLoading = false;
           _errorMessage = null;
         });
         
@@ -165,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
       
       setState(() {
         _errorMessage = e.toString();
-        _isLoading = false; // CRITICAL: Stop loading even on error
+        _isLoading = false;
       });
     }
   }
@@ -297,22 +303,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     locationName: _locationName,
                     calculationMethod: _calculationMethod,
                     asrMethod: _asrMethod,
-                    onLocationChanged: (position, name) {
-                      // This callback is not actually used - we get data from Navigator.pop result
-                    },
-                    onCalculationMethodChanged: (newMethod) {
-                      // This callback is not actually used - we get data from Navigator.pop result
-                    },
-                    onAsrMethodChanged: (newAsrMethod) {
-                      // This callback is not actually used - we get data from Navigator.pop result
-                    },
+                    onLocationChanged: (position, name) {},
+                    onCalculationMethodChanged: (newMethod) {},
+                    onAsrMethodChanged: (newAsrMethod) {},
                   ),
                 ),
               );
               
               if (result != null) {
                 debugPrint('✅ Settings result: $result');
-
+                
+                // Update time format preference
+                if (result['use24HourFormat'] != null) {
+                  setState(() {
+                    _use24HourFormat = result['use24HourFormat'];
+                  });
+                }
+                
                 // Update location if changed
                 if (result['position'] != null) {
                   setState(() {
@@ -321,11 +328,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
                     _asrMethod = result['asrMethod'] ?? _asrMethod;
                   });
-
+                  
                   debugPrint('📍 Location updated to: $_locationName');
-                  await _loadPrayerTimes(); // Reload with new location
+                  await _loadPrayerTimes();
                 } else {
-                  // Only method/asr changed
                   setState(() {
                     _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
                     _asrMethod = result['asrMethod'] ?? _asrMethod;
@@ -404,7 +410,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         
                         const SizedBox(height: 16),
                         
-                        // Mosques section
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
@@ -516,7 +521,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Method: ${_prayerTimes!.method}',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                // Removed cached indicator
               ],
             ),
           ],
@@ -526,6 +530,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPrayerTimeRow(String name, String time) {
+    final formattedTime = TimeFormatService.formatTime(time, _use24HourFormat);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -539,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Text(
-            time,
+            formattedTime,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
