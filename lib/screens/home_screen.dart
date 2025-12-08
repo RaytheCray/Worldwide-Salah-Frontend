@@ -6,6 +6,7 @@ import '../services/time_format_service.dart';
 import '../models/prayer_times.dart' as prayer_model;
 import '../models/mosque.dart' as mosque_model;
 import 'settings_screen.dart';
+import '../services/asr_method_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -137,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final today = DateTime.now();
       final dateString = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      
+      _asrMethod = await AsrMethodService.getAsrMethod();
 
       debugPrint('🔄 HomeScreen: Requesting prayer times for $dateString');
       
@@ -319,6 +322,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     _use24HourFormat = result['use24HourFormat'];
                   });
                 }
+
+                bool asrMethodChanged = result['asrMethod'] != null &&
+                                        result['asrMethod'] != _asrMethod;
                 
                 // Update location if changed
                 if (result['position'] != null) {
@@ -330,6 +336,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                   
                   debugPrint('📍 Location updated to: $_locationName');
+                  await _loadPrayerTimes();
+                } else if (asrMethodChanged) {
+                  setState(() {
+                    _asrMethod = result['asrMethod'];
+                  });
+                  debugPrint('🕌 Asr method updated to: $_asrMethod');
                   await _loadPrayerTimes();
                 } else {
                   setState(() {

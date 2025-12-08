@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'qibla_screen.dart';
 import '../services/time_format_service.dart';
+import '../services/asr_method_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Position? currentPosition;
@@ -78,6 +79,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     // Save time format preference
     TimeFormatService.set24HourFormat(_use24HourFormat);
+
+    // Save Asr method preference
+    AsrMethodService.setAsrMethod(_selectedAsrMethod);
     
     Future.delayed(const Duration(milliseconds: 100), () {
       if (!mounted) return;

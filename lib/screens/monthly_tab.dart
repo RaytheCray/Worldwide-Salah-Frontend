@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../utils/prayer_calculator.dart';
 import '../services/time_format_service.dart';
+import '../services/asr_method_service.dart';
 
 class MonthlyTab extends StatefulWidget {
   const MonthlyTab({super.key});
@@ -17,6 +18,7 @@ class _MonthlyTabState extends State<MonthlyTab> {
   Position? _currentPosition;
   DateTime _selectedDate = DateTime.now();
   bool _use24HourFormat = true;
+  String _asrMethod = 'standard';
 
   @override
   void initState() {
@@ -27,9 +29,11 @@ class _MonthlyTabState extends State<MonthlyTab> {
 
   Future<void> _loadPreferences() async {
     final use24Hour = await TimeFormatService.get24HourFormat();
+    final asrMethod = await AsrMethodService.getAsrMethod();
     if (mounted) {
       setState(() {
         _use24HourFormat = use24Hour;
+        _asrMethod = asrMethod;
       });
     }
   }
@@ -100,7 +104,7 @@ class _MonthlyTabState extends State<MonthlyTab> {
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
         method: 'ISNA',
-        asrMethod: 'standard',
+        asrMethod: _asrMethod,
       );
 
       setState(() {
