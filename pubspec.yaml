@@ -21,7 +21,7 @@ dependencies:
   geocoding: ^4.0.0
   
   # Data Storage
-  shared_preferences: ^2.2.0
+  shared_preferences: ^2.5.3
   
   # Notifications
   flutter_local_notifications: ^17.1.0
