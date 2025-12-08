@@ -214,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _cityController.text = cityName;
       });
 
-      if (!mounted) return;
+      if (!mounted) return;  // Add mounted check before using context
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -531,7 +531,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const QiblaScreen(),
+                              builder: (context) => QiblaScreen(
+                                initialPosition: _selectedPosition,
+                                initialLocationName: _selectedLocationName,
+                              ),
                             ),
                           );
                         },
