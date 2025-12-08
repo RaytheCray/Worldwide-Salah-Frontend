@@ -512,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Prayer Times',
+              'Today\'s Prayer Times',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
