@@ -85,9 +85,9 @@ class _QiblaScreenState extends State<QiblaScreen> {
         desiredAccuracy: LocationAccuracy.high,
       ).timeout(const Duration(seconds: 10));
 
-      // Kaaba coordinates
-      const double kaabaLat = 21.4225;  // Mecca latitude
-      const double kaabaLon = 39.8262;  // Mecca longitude
+      // Qibla coordinates
+      const double kaabaLat = 21.4225;  // Makkah latitude
+      const double kaabaLon = 39.8262;  // Makkah longitude
 
       // Calculate Qibla direction
       final qibla = _calculateQiblaDirection(
@@ -309,7 +309,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 32),
                           child: Text(
-                            'Point your device in the direction of the arrow to face the Kaaba in Mecca',
+                            'Point your device in the direction of the arrow to face the Qibla in Makkah',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,

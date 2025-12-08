@@ -583,7 +583,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        subtitle: const Text('Compass pointing to Mecca'),
+                        subtitle: const Text('Compass pointing to Makkah'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.push(
