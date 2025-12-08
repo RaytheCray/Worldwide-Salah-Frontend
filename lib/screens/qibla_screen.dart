@@ -3,7 +3,14 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
 
 class QiblaScreen extends StatefulWidget {
-  const QiblaScreen({super.key});
+  final Position? initialPosition;
+  final String? initialLocationName;
+  
+  const QiblaScreen({
+    super.key,
+    this.initialPosition,
+    this.initialLocationName,
+  });
 
   @override
   State<QiblaScreen> createState() => _QiblaScreenState();
@@ -14,11 +21,43 @@ class _QiblaScreenState extends State<QiblaScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   Position? _currentPosition;
+  String? _locationName;
 
   @override
   void initState() {
     super.initState();
-    _calculateQibla();
+    _initializeQibla();
+  }
+
+  Future<void> _initializeQibla() async {
+    // Use provided position if available
+    if (widget.initialPosition != null) {
+      _calculateQiblaFromPosition(
+        widget.initialPosition!,
+        widget.initialLocationName ?? 'Current Location',
+      );
+    } else {
+      _calculateQibla();
+    }
+  }
+
+  void _calculateQiblaFromPosition(Position position, String locationName) {
+    const double kaabaLat = 21.4225;
+    const double kaabaLon = 39.8262;
+
+    final qibla = _calculateQiblaDirection(
+      position.latitude,
+      position.longitude,
+      kaabaLat,
+      kaabaLon,
+    );
+
+    setState(() {
+      _currentPosition = position;
+      _locationName = locationName;
+      _qiblaDirection = qibla;
+      _isLoading = false;
+    });
   }
 
   Future<void> _calculateQibla() async {
@@ -215,21 +254,33 @@ class _QiblaScreenState extends State<QiblaScreen> {
                                 const SizedBox(height: 16),
                                 const Divider(),
                                 const SizedBox(height: 16),
-                                if (_currentPosition != null) ...[
+                                Text(
+                                  'Your Location',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                if (_locationName != null) ...[
+                                  const SizedBox(height: 4),
                                   Text(
-                                    'Your Location',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
+                                    _locationName!,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
+                                ],
+                                if (_currentPosition != null) ...[
+                                  const SizedBox(height: 4),
                                   Text(
-                                    'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  Text(
+                                    'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, '
                                     'Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}',
-                                    style: const TextStyle(fontSize: 14),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                    ),
                                   ),
                                 ],
                               ],
