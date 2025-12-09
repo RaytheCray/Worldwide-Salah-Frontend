@@ -47,6 +47,9 @@ class _MyAppState extends State<MyApp> {
           seedColor: Colors.blue,
           brightness: Brightness.light,
         ),
+        appBarTheme: const AppBarTheme(
+          toolbarHeight: 64.0,
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
