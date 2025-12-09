@@ -136,6 +136,9 @@ class _MonthlyTabState extends State<MonthlyTab> {
       appBar: AppBar(
         title: Text(
           '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
         ),
         actions: [
           IconButton(

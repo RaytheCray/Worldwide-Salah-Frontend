@@ -115,7 +115,14 @@ class _RamadanTabState extends State<RamadanTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ramadan $_selectedYear'),
+        title: Text(
+          'Ramadan $_selectedYear', 
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
@@ -179,7 +186,7 @@ class _RamadanTabState extends State<RamadanTab> {
           // Ramadan Info Card
           Card(
             margin: const EdgeInsets.all(16),
-            color: Colors.green.shade50,
+            color: Theme.of(context).colorScheme.primaryContainer,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -187,13 +194,14 @@ class _RamadanTabState extends State<RamadanTab> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.nightlight, color: Colors.green.shade700),
+                      Icon(Icons.nightlight, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Ramadan $_selectedYear',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -203,7 +211,7 @@ class _RamadanTabState extends State<RamadanTab> {
                     '${_ramadanData!['start_date']} - ${_ramadanData!['end_date']}',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.green.shade700,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ],
