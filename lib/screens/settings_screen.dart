@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'qibla_screen.dart';
 import '../services/time_format_service.dart';
 import '../services/asr_method_service.dart';
@@ -10,6 +11,7 @@ class SettingsScreen extends StatefulWidget {
   final String locationName;
   final String calculationMethod;
   final String asrMethod;
+  final Function(bool) onThemeChanged;
   final Function(Position, String) onLocationChanged;
   final Function(String) onCalculationMethodChanged;
   final Function(String) onAsrMethodChanged;
@@ -20,6 +22,7 @@ class SettingsScreen extends StatefulWidget {
     required this.locationName,
     required this.calculationMethod,
     required this.asrMethod,
+    required this.onThemeChanged,
     required this.onLocationChanged,
     required this.onCalculationMethodChanged,
     required this.onAsrMethodChanged,
@@ -38,6 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isInitialized = false;
   bool _isSearching = false;
   bool _use24HourFormat = true;
+  bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -49,6 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _selectedLocationName = widget.locationName;
     
     _loadTimeFormat();
+    _loadDarkMode();
     
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
@@ -68,6 +73,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _loadDarkMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = prefs.getBool('isDarkMode') ?? false;
+    if (mounted) {
+      setState(() {
+        _isDarkMode = isDark;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _cityController.dispose();
@@ -79,6 +94,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     // Save time format preference
     TimeFormatService.set24HourFormat(_use24HourFormat);
+
+    // Save dark mode preferences
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('isDarkMode', _isDarkMode);
+    });
 
     // Save Asr method preference
     AsrMethodService.setAsrMethod(_selectedAsrMethod);
@@ -265,7 +285,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Colors.blue.shade600,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _handleBack,
@@ -292,11 +313,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // Location Section
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.shadow.withValues(),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -309,11 +330,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Location',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -326,7 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     decoration: InputDecoration(
                                       hintText: 'Enter city (e.g., New York, NY)',
                                       filled: true,
-                                      fillColor: Colors.grey.shade100,
+                                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide.none,
@@ -389,16 +410,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 
                 const SizedBox(height: 16),
+
+                // Dark Mode Toggle
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dark Mode',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _isDarkMode ? 'Dark theme enabled' : 'Light theme enabled',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: _isDarkMode,
+                        onChanged: (value) async {
+                          setState(() {
+                            _isDarkMode = value;
+                          });
+                          // Save to SharedPreferences
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('isDarkMode', value);
+                          // Notify app immediately
+                          widget.onThemeChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 
                 // Calculation Method
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.shadow.withValues(),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -407,11 +483,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Calculation Method',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -419,7 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -448,11 +524,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.shadow.withValues(),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -461,11 +537,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Asr Calculation',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -473,7 +549,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -558,11 +634,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Qibla Direction',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -572,12 +648,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
+                            color: Theme.of(context).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             Icons.explore,
-                            color: Colors.blue.shade600,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         title: const Text(

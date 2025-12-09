@@ -28,7 +28,8 @@ class MosquesTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nearby Mosques'),
-        backgroundColor: Colors.blue.shade600,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 0,
       ),
       body: ListView.builder(
@@ -39,11 +40,11 @@ class MosquesTab extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.shadow.withValues(),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -55,7 +56,10 @@ class MosquesTab extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.blue.shade500, Colors.blue.shade700],
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withValues(),
+                      ],
                     ),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),

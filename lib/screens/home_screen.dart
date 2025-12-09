@@ -9,7 +9,9 @@ import 'settings_screen.dart';
 import '../services/asr_method_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(bool) onThemeChanged;
+
+  const HomeScreen({super.key, required this.onThemeChanged});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -242,13 +244,13 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Row(
         children: [
-          Icon(Icons.location_on, color: Colors.blue.shade700),
+          Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -265,14 +267,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   _locationName,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade700,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.refresh, color: Colors.blue.shade700),
+            icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
             onPressed: () {
               setState(() {
                 _isLoading = true;
@@ -294,6 +296,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Worldwide Salah'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -306,6 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     locationName: _locationName,
                     calculationMethod: _calculationMethod,
                     asrMethod: _asrMethod,
+                    onThemeChanged: widget.onThemeChanged,
                     onLocationChanged: (position, name) {},
                     onCalculationMethodChanged: (newMethod) {},
                     onAsrMethodChanged: (newAsrMethod) {},

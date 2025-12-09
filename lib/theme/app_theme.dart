@@ -171,4 +171,98 @@ class AppTheme {
       ),
     );
   }
+
+  // Dark Theme
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      fontFamily: fontFamily,
+      brightness: Brightness.dark,
+      primaryColor: primaryBlue,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: const ColorScheme.dark(
+        primary: lightBlue,
+        secondary: primaryBlue,
+        surface: Color(0xFF1E1E1E),
+        surfaceContainerHighest: Color(0xFF2C2C2C),
+        error: Colors.red,
+        onPrimary: Colors.black,
+        onSecondary: Colors.white,
+        onSurface: Colors.white,
+        onSurfaceVariant: Color(0xFFB3B3B3),
+        outline: Color(0xFF3D3D3D),
+        shadow: Colors.black,
+        primaryContainer: Color(0xFF1E3A5F),
+      ),
+      
+      // AppBar Theme
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E1E1E),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+
+      // Text Theme
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        bodyLarge: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: Colors.white,
+        ),
+        bodyMedium: TextStyle(
+          fontFamily: fontFamily,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFFE0E0E0),
+        ),
+      ),
+
+      // Elevated Button Theme
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: lightBlue,
+          foregroundColor: Colors.black,
+          textStyle: buttonText,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+        ),
+      ),
+
+      // Input Decoration Theme
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF2C2C2C),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
+
+      // Icon Theme
+      iconTheme: const IconThemeData(
+        color: lightBlue,
+      ),
+    );
+  }
 }
