@@ -247,12 +247,6 @@ class _QiblaScreenState extends State<QiblaScreen> {
                                 )
                               else
                                 const CircularProgressIndicator(),
-                              // Kaaba icon in center
-                              Icon(
-                                Icons.home,
-                                size: 40,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
                             ],
                           ),
                         ),
