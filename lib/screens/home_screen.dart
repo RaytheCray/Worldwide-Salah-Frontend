@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:worldwide_salah/services/geocoding_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/time_format_service.dart';
 import '../models/prayer_times.dart' as prayer_model;
@@ -226,6 +227,25 @@ class _HomeScreenState extends State<HomeScreen> {
         _mosquesLoaded = false;
         _nearbyMosques = [];
       });
+    }
+  }
+
+  Future<void> _launchMaps(double lat, double lng, String name) async {
+    // Universal map URL that works on both iOS and Android
+    final Uri mapsUrl = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+
+    try {
+      if (await canLaunchUrl(mapsUrl)) {
+        await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not open maps';
+      }
+    } catch (e) {
+      debugPrint('❌ Error launching maps: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open maps application')),
+      );
     }
   }
 
@@ -605,28 +625,144 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showMosqueDetails(mosque_model.Mosque mosque) {
     showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                mosque.name,
-                style: Theme.of(context).textTheme.headlineSmall,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Mosque Name
+            Text(
+              mosque.name,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 8),
-              if (mosque.address case final address?)
-                Text(address),
-              if (mosque.phone case final phone?)
-                Text('Phone: $phone'),
-              if (mosque.distance case final distance?)
-                Text('Distance: ${distance.toStringAsFixed(1)} km'),
+            ),
+            const SizedBox(height: 16),
+            
+            // Address
+            if (mosque.address case final address?)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue[300]
+                        : Colors.blue,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      address,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            
+            // Phone
+            if (mosque.phone case final phone?)
+              if (phone.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.phone,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blue[300]
+                          : Colors.blue,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Phone: $phone',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ],
+            
+            // Distance
+            if (mosque.distance case final distance?) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.straighten,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue[300]
+                        : Colors.blue,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Distance: ${distance.toStringAsFixed(1)} km',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
             ],
-          ),
-        );
-      },
+            
+            const SizedBox(height: 24),
+            
+            // Get Directions Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  _launchMaps(mosque.latitude, mosque.longitude, mosque.name);
+                },
+                icon: const Icon(Icons.directions),
+                label: const Text('Get Directions'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            
+            // Call Button (if phone exists)
+            if (mosque.phone case final phone?)
+              if (phone.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final Uri phoneUrl = Uri.parse('tel:$phone');
+                      try {
+                        if (await canLaunchUrl(phoneUrl)) {
+                          await launchUrl(phoneUrl);
+                        }
+                      } catch (e) {
+                        debugPrint('❌ Error launching phone: $e');
+                      }
+                    },
+                    icon: const Icon(Icons.phone),
+                    label: const Text('Call Mosque'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+          ],
+        ),
+      ),
     );
   }
 }
