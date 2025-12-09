@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'dart:math' as math;
 
 class QiblaScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class QiblaScreen extends StatefulWidget {
 
 class _QiblaScreenState extends State<QiblaScreen> {
   double? _qiblaDirection;
+  double? _currentHeading;
   bool _isLoading = true;
   String? _errorMessage;
   Position? _currentPosition;
@@ -27,6 +29,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
   void initState() {
     super.initState();
     _initializeQibla();
+    _initCompass();
   }
 
   Future<void> _initializeQibla() async {
@@ -39,6 +42,21 @@ class _QiblaScreenState extends State<QiblaScreen> {
     } else {
       _calculateQibla();
     }
+  }
+
+  void _initCompass() {
+    FlutterCompass.events?.listen((CompassEvent event) {
+      if (mounted) {
+        setState(() {
+          _currentHeading = event.heading;
+        });
+      }
+    });
+  }
+
+  double get _qiblaAngle {
+    if (_currentHeading == null || _qiblaDirection == null) return 0;
+    return (_qiblaDirection! - _currentHeading!);
   }
 
   void _calculateQiblaFromPosition(Position position, String locationName) {
@@ -142,6 +160,8 @@ class _QiblaScreenState extends State<QiblaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
@@ -185,13 +205,13 @@ class _QiblaScreenState extends State<QiblaScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Compass display
+                        // Compass display with ROTATING ARROW
                         Container(
                           width: 280,
                           height: 280,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white,
+                            color: isDark ? Colors.grey[800] : Colors.white,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.2),
@@ -215,20 +235,23 @@ class _QiblaScreenState extends State<QiblaScreen> {
                                   ),
                                 ),
                               ),
-                              // Qibla arrow
-                              Transform.rotate(
-                                angle: _qiblaDirection! * math.pi / 180,
-                                child: Icon(
-                                  Icons.navigation,
-                                  size: 120,
-                                  color: Colors.blue.shade600,
-                                ),
-                              ),
+                              // ROTATING Qibla arrow based on device heading
+                              if (_currentHeading != null)
+                                Transform.rotate(
+                                  angle: _qiblaAngle * math.pi / 180,
+                                  child: Icon(
+                                    Icons.navigation,
+                                    size: 120,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                )
+                              else
+                                const CircularProgressIndicator(),
                               // Kaaba icon in center
-                              const Icon(
+                              Icon(
                                 Icons.home,
                                 size: 40,
-                                color: Colors.black87,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ],
                           ),
@@ -239,6 +262,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
                         // Direction info
                         Card(
                           margin: const EdgeInsets.symmetric(horizontal: 32),
+                          color: isDark ? Colors.grey[850] : null,
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
@@ -333,5 +357,10 @@ class _QiblaScreenState extends State<QiblaScreen> {
                   ),
                 ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
