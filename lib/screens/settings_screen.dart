@@ -466,7 +466,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 // Calculation Method
                 Container(
                   padding: const EdgeInsets.all(16),
