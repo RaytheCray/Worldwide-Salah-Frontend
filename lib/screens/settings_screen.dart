@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'qibla_screen.dart';
 import '../services/time_format_service.dart';
 import '../services/asr_method_service.dart';
+import '../services/distance_unit_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Position? currentPosition;
@@ -42,6 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isSearching = false;
   bool _use24HourFormat = true;
   bool _isDarkMode = false;
+  bool _useKilometers = true;
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     _loadTimeFormat();
     _loadDarkMode();
+    _loadDistanceUnit();
     
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
@@ -79,6 +82,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() {
         _isDarkMode = isDark;
+      });
+    }
+  }
+
+  Future<void> _loadDistanceUnit() async {
+    final useKm = await DistanceUnitService.getUseKilometers();
+    if (mounted) {
+      setState(() {
+        _useKilometers = useKm;
       });
     }
   }
@@ -525,6 +537,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 
                 const SizedBox(height: 16),
+
+                // Distance Unit Toggle
+                Container(
+                  padding: const EdgeInsets.all(16), 
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Distance Unit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _useKilometers ? 'Kilometers (km)' : 'Miles (mi)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: _useKilometers,
+                        onChanged: (value) async {
+                          setState(() {
+                            _useKilometers = value;
+                          });
+                          // Save to SharedPreferences
+                          await DistanceUnitService.setUseKilometers(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 
                 // Asr Calculation
                 Container(

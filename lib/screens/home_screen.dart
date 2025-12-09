@@ -8,6 +8,7 @@ import '../models/prayer_times.dart' as prayer_model;
 import '../models/mosque.dart' as mosque_model;
 import 'settings_screen.dart';
 import '../services/asr_method_service.dart';
+import '../services/distance_unit_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(bool) onThemeChanged;
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _mosquesLoaded = false;
   String _locationName = 'Loading...';
   bool _use24HourFormat = true;
+  bool _useKilometers = true;
   
   String _calculationMethod = 'ISNA';
   String _asrMethod = 'standard';
@@ -43,9 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadPreferences() async {
     final use24Hour = await TimeFormatService.get24HourFormat();
+    final useKm = await DistanceUnitService.getUseKilometers();
     if (mounted) {
       setState(() {
         _use24HourFormat = use24Hour;
+        _useKilometers = useKm;
       });
     }
   }
@@ -231,15 +235,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _launchMaps(double lat, double lng, String name) async {
-    // Universal map URL that works on both iOS and Android
-    final Uri mapsUrl = Uri.parse('https://maps.google.com/?q=$lat,$lng');
+    // Using geo: URI scheme which works better on Android
+    final Uri geoUri = Uri.parse('geo:$lat,$lng?q=$lat,$lng($name)');
 
     try {
-      if (await canLaunchUrl(mapsUrl)) {
-        await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not open maps';
+      // Try geo: scheme first (works on both Android and iOS)
+      if (await canLaunchUrl(geoUri)) {
+        await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+        return;
+      } 
+      // Fallback to Google Maps web URL
+      final Uri webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      if (await canLaunchUrl(webUri)) {
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        return;
       }
+      throw 'Could not open maps';
     } catch (e) {
       debugPrint('❌ Error launching maps: $e');
       if (!mounted) return;
@@ -604,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (mosque.address case final address?) Text(address),
                 if (mosque.distance case final distance?)
                   Text(
-                    '${distance.toStringAsFixed(1)} km away',
+                    '${DistanceUnitService.formatDistance(distance, _useKilometers)} away',
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.w500,
@@ -703,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Distance: ${distance.toStringAsFixed(1)} km',
+                    'Distance: ${DistanceUnitService.formatDistance(distance, _useKilometers)}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
