@@ -466,6 +466,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 
+                const SizedBox(height: 24),
                 // Calculation Method
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -580,11 +581,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.shadow.withValues(),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -603,7 +604,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _use24HourFormat ? '24-Hour (13:00)' : '12-Hour (1:00 PM)',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     value: _use24HourFormat,
@@ -621,11 +622,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.shadow.withValues(),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),

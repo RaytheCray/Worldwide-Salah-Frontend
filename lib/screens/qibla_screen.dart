@@ -145,7 +145,8 @@ class _QiblaScreenState extends State<QiblaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Qibla Direction'),
-        backgroundColor: Colors.blue.shade600,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -245,10 +246,10 @@ class _QiblaScreenState extends State<QiblaScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                   _getCardinalDirection(_qiblaDirection!),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.black87,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 const SizedBox(height: 16),

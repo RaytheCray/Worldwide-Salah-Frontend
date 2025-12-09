@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _errorMessage;
   Position? _currentPosition;
   bool _mosquesLoading = false;
-  String? _mosqueError;
   bool _mosquesLoaded = false;
   String _locationName = 'Loading...';
   bool _use24HourFormat = true;
@@ -183,15 +182,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadNearbyMosques() async {
     if (_currentPosition == null) {
-      setState(() {
-        _mosqueError = 'Location not available';
-      });
+      debugPrint('⚠️ Cannot load mosques - no position');
       return;
     }
 
     setState(() {
       _mosquesLoading = true;
-      _mosqueError = null;
     });
 
     try {
@@ -216,9 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         
         if (_nearbyMosques.isEmpty) {
-          setState(() {
-            _mosqueError = 'No mosques found within 10km';
-          });
+          debugPrint('ℹ️ No mosques found within 10km');
         }
       } else {
         throw Exception(response['error'] ?? 'Failed to load mosques');
@@ -230,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _mosquesLoading = false;
         _mosquesLoaded = false;
-        _mosqueError = e.toString().replaceAll('Exception: ', '');
+        _nearbyMosques = [];
       });
     }
   }
@@ -439,12 +433,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (_mosquesLoading)
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
+                              Row(
+                                children: [
+                                  if (_mosquesLoading)
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  if (!_mosquesLoading)
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.refresh,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                      onPressed: _loadNearbyMosques,
+                                      tooltip: 'Refresh Mosques',
+                                    ),
+                                ]
+                              )
                             ],
                           ),
                         ),
@@ -464,21 +471,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         
-                        if (_mosqueError != null)
-                          Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.warning, color: Colors.orange[700]),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: Text(_mosqueError!)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        
                         if (_nearbyMosques.isEmpty && _mosquesLoaded)
                           Card(
                             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -486,12 +478,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.all(16),
                               child: Row(
                                 children: [
-                                  Icon(Icons.info_outline, color: Colors.grey[600]),
+                                  Icon(Icons.warning, color: Theme.of(context).colorScheme.onSurfaceVariant),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Text(
-                                      'No mosques found within 10 km',
-                                      style: TextStyle(color: Colors.grey[600]),
+                                      'No Mosques found within 10 km',
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                                     ),
                                   ),
                                 ],
