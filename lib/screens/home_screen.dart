@@ -347,8 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               );
+
+              await _loadPreferences();
               
-              if (result != null) {
+              if (result != null && mounted) {
                 debugPrint('✅ Settings result: $result');
                 
                 // Update time format preference
