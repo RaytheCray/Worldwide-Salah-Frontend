@@ -146,7 +146,12 @@ class _QiblaScreenState extends State<QiblaScreen> {
       appBar: AppBar(
         title: const Padding(
           padding: EdgeInsets.only(top: 8.0),
-          child: Text('Qibla Direction'),
+          child: Text(
+            'Qibla Direction',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
