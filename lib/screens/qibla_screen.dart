@@ -144,7 +144,10 @@ class _QiblaScreenState extends State<QiblaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Qibla Direction'),
+        title: const Padding(
+          padding: EdgeInsets.only(top: 8.0),
+          child: Text('Qibla Direction'),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),

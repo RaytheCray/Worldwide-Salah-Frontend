@@ -134,10 +134,13 @@ class _MonthlyTabState extends State<MonthlyTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            '${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         actions: [

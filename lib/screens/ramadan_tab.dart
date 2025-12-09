@@ -115,10 +115,13 @@ class _RamadanTabState extends State<RamadanTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Ramadan $_selectedYear', 
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            'Ramadan $_selectedYear', 
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,

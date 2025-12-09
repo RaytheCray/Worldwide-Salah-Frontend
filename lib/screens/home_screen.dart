@@ -320,10 +320,13 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Worldwide Salah', 
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
+        title: const Padding(
+          padding: EdgeInsets.only(top: 8.0),
+          child: Text(
+            'Worldwide Salah', 
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
