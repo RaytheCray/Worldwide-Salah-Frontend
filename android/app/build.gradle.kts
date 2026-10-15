@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.worldwide_salah"
+    namespace = "com.raythecray.worldwidesalah"
     compileSdk = 36  // Changed from flutter.compileSdkVersion
 
     defaultConfig {
-        applicationId = "com.example.worldwide_salah"
+        applicationId = "com.raythecray.worldwidesalah"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 1
