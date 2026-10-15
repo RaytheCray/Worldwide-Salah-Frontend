@@ -1,4 +1,4 @@
-package com.example.worldwide_salah
+package com.raythecray.worldwidesalah
 
 import io.flutter.embedding.android.FlutterActivity
 
