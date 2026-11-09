@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
         date: dateString,
         method: _calculationMethod,
         asrMethod: _asrMethod,
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(ApiService.timeoutDuration);
 
       debugPrint('📦 Response received: ${response['success']}');
 
