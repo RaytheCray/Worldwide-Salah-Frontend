@@ -9,7 +9,8 @@ class ApiService {
     defaultValue: 'http://10.0.2.2:5000/api', // Android emulator
   );
   
-  static const Duration timeoutDuration = Duration(seconds: 10);
+  // Long enough for a free-tier server (e.g. Render) to wake up from sleep
+  static const Duration timeoutDuration = Duration(seconds: 60);
 
   static Future<void> init() async {
     debugPrint('📱 ApiService initialized');
