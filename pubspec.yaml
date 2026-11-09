@@ -13,18 +13,12 @@ dependencies:
 
   http: ^1.1.0
 
-  # For notifications
-  permission_handler: ^12.0.1
-
   # Location Services
   geolocator: ^10.0.0
   geocoding: ^4.0.0
   
   # Data Storage
   shared_preferences: ^2.5.3
-  
-  # Notifications
-  flutter_local_notifications: ^17.1.0
   
   # Date and Time Formatting
   intl: ^0.18.0
@@ -33,7 +27,7 @@ dependencies:
   adhan: ^2.0.0
   
   # Qiblah Direction - USE PUB.DEV VERSION, NOT GIT
-  flutter_compass: ^0.8.0
+  flutter_compass: ^0.8.1
   
   # UI Components
   cupertino_icons: ^1.0.2
