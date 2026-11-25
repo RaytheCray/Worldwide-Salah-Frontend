@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2E8FF0"/>
+      <stop offset="1" stop-color="#0B3A78"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#F5B82E"/>
+    </linearGradient>
+    <mask id="finial">
+      <rect width="1024" height="1024" fill="white"/>
+      <circle cx="523" cy="283" r="20" fill="black"/>
+    </mask>
+    <clipPath id="globeClip"><circle cx="512" cy="530" r="384"/></clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Globe -->
+  <circle cx="512" cy="530" r="390" fill="#FFFFFF" fill-opacity="0.12"/>
+  <g fill="none" stroke="#FFFFFF" stroke-opacity="0.42" stroke-width="12" clip-path="url(#globeClip)">
+    <ellipse cx="512" cy="530" rx="250" ry="390"/>
+    <ellipse cx="512" cy="530" rx="105" ry="390"/>
+    <line x1="512" y1="140" x2="512" y2="920"/>
+    <line x1="120" y1="530" x2="904" y2="530"/>
+    <path d="M150 360 Q512 430 874 360"/>
+    <path d="M150 700 Q512 630 874 700"/>
+  </g>
+  <circle cx="512" cy="530" r="384" fill="none" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="16"/>
+
+  <!-- Mosque -->
+  <g fill="#FFFFFF">
+    <!-- dome -->
+    <path d="M362 585 C362 490 432 450 472 420 C496 402 506 385 512 352 C518 385 528 402 552 420 C592 450 662 490 662 585 Z"/>
+    <!-- finial -->
+    <rect x="506" y="300" width="12" height="60" rx="6"/>
+    <!-- hall -->
+    <rect x="342" y="575" width="340" height="150" rx="6"/>
+    <!-- base -->
+    <rect x="222" y="715" width="580" height="70" rx="14"/>
+    <!-- left minaret -->
+    <rect x="262" y="470" width="52" height="250"/>
+    <rect x="250" y="525" width="76" height="18" rx="6"/>
+    <path d="M256 472 L288 395 L320 472 Z"/>
+    <!-- right minaret -->
+    <rect x="710" y="470" width="52" height="250"/>
+    <rect x="698" y="525" width="76" height="18" rx="6"/>
+    <path d="M704 472 L736 395 L768 472 Z"/>
+  </g>
+  <!-- finial crescent -->
+  <circle cx="512" cy="290" r="24" fill="url(#gold)" mask="url(#finial)"/>
+
+  <!-- door and windows -->
+  <g fill="#1559B0">
+    <path d="M482 715 V660 A30 30 0 0 1 542 660 V715 Z"/>
+    <path d="M392 690 V650 A20 20 0 0 1 432 650 V690 Z"/>
+    <path d="M592 690 V650 A20 20 0 0 1 632 650 V690 Z"/>
+  </g>
+</svg>

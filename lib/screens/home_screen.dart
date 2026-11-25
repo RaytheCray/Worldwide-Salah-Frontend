@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
         radius: 10.0,
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(ApiService.timeoutDuration);
 
       if (!mounted) return;
 
