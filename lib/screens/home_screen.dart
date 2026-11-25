@@ -102,8 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
       
       if (!mounted) return;
       
+      final reloadMosques = _mosquesLoaded;
       setState(() {
         _currentPosition = position;
+        _clearMosques();
       });
 
       try {
@@ -119,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       await _loadPrayerTimes();
+      if (reloadMosques) await _loadNearbyMosques();
       
     } catch (e) {
       debugPrint('❌ HomeScreen: Location error: $e');
@@ -183,6 +186,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  /// Mosques belong to a location, so drop them when the location changes
+  void _clearMosques() {
+    _nearbyMosques = [];
+    _mosquesLoaded = false;
   }
 
   Future<void> _loadNearbyMosques() async {
@@ -368,7 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 // Update location if changed
                 if (result['position'] != null) {
+                  final reloadMosques = _mosquesLoaded;
                   setState(() {
+                    _clearMosques();
                     _currentPosition = result['position'];
                     _locationName = result['locationName'] ?? _locationName;
                     _calculationMethod = result['calculationMethod'] ?? _calculationMethod;
@@ -377,6 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   
                   debugPrint('📍 Location updated to: $_locationName');
                   await _loadPrayerTimes();
+                  if (reloadMosques) await _loadNearbyMosques();
                 } else if (asrMethodChanged) {
                   setState(() {
                     _asrMethod = result['asrMethod'];
